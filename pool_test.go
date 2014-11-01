@@ -19,11 +19,11 @@ func TestPoolNil(t *testing.T) {
 	}
 	for i := 0; i < 10; i++ {
 		if s := p.Get(); s == nil {
-			t.Fatalf("Elem %d is nil", i)
+			t.Fatalf("Item %d is nil", i)
 		} else {
 			ss := s.(*S)
 			if ss.id != i {
-				t.Fatalf("Elem id %d != %d", ss.id, i)
+				t.Fatalf("Item id %d != %d", ss.id, i)
 			}
 		}
 	}
@@ -39,11 +39,11 @@ func TestPoolAlloc(t *testing.T) {
 	}
 	for i := 0; i < 10; i++ {
 		if s := p.Get(); s == nil {
-			t.Fatalf("Elem %d is nil", i)
+			t.Fatalf("Item %d is nil", i)
 		} else {
 			ss := s.(*S)
 			if ss.id != i {
-				t.Fatalf("Elem id %d != %d", ss.id, i)
+				t.Fatalf("Item id %d != %d", ss.id, i)
 			}
 		}
 	}
@@ -74,9 +74,9 @@ func TestBSPoolNil(t *testing.T) {
 	}
 	for i := 0; i < 10; i++ {
 		if b := p.Get(); b == nil {
-			t.Fatalf("Elem %d is nil", i)
+			t.Fatalf("Item %d is nil", i)
 		} else if b[63] != byte(i) {
-			t.Fatalf("Elem %d[0] != %d", b[63], i)
+			t.Fatalf("Item %d[0] != %d", b[63], i)
 		}
 	}
 	if b := p.Get(); b != nil {
@@ -93,9 +93,9 @@ func TestBSPoolAlloc(t *testing.T) {
 	}
 	for i := 0; i < 10; i++ {
 		if b := p.Get(); b == nil {
-			t.Fatalf("Elem %d is nil", i)
+			t.Fatalf("Item %d is nil", i)
 		} else if b[63] != byte(i) {
-			t.Fatalf("Elem %d[0] != %d", b[63], i)
+			t.Fatalf("Item %d[0] != %d", b[63], i)
 		}
 	}
 	if b := p.Get(); b == nil {
