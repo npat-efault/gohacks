@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/npat-efault/varhacks/pool"
+	"github.com/npat-efault/gohacks/pool"
 )
 
 type S struct {
