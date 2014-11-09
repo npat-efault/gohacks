@@ -108,14 +108,14 @@ func (cq *CQ) PopBack() (el interface{}, ok bool) {
 // PushBack adds element "el" to the back (tail) of the queue. Returns
 // ok == false if the list was full (unable to push element), ok ==
 // true otherwise.
-func (cq *CQ) PushBack(e interface{}) (ok bool) {
+func (cq *CQ) PushBack(el interface{}) (ok bool) {
 	if cq.e-cq.s == cq.sz {
 		if cq.sz == cq.maxSz {
 			return false
 		}
 		cq.resize(cq.sz << 1)
 	}
-	cq.b[cq.e&cq.m] = e
+	cq.b[cq.e&cq.m] = el
 	cq.e++
 	return true
 }
@@ -123,7 +123,7 @@ func (cq *CQ) PushBack(e interface{}) (ok bool) {
 // PushFront adds element "e" to the front (head) of the queue. Returns
 // ok == false if the list was full (unable to push element), ok ==
 // true otherwise.
-func (cq *CQ) PushFront(e interface{}) (ok bool) {
+func (cq *CQ) PushFront(el interface{}) (ok bool) {
 	if cq.e-cq.s == cq.sz {
 		if cq.sz == cq.maxSz {
 			return false
@@ -131,7 +131,7 @@ func (cq *CQ) PushFront(e interface{}) (ok bool) {
 		cq.resize(cq.sz << 1)
 	}
 	cq.s--
-	cq.b[cq.s&cq.m] = e
+	cq.b[cq.s&cq.m] = el
 	return true
 }
 

@@ -106,14 +106,14 @@ func (cq *__Q) PopBack() (el __ELTYPE, ok bool) {
 // PushBack adds element "el" to the back (tail) of the queue. Returns
 // ok == false if the list was full (unable to push element), ok ==
 // true otherwise.
-func (cq *__Q) PushBack(e __ELTYPE) (ok bool) {
+func (cq *__Q) PushBack(el __ELTYPE) (ok bool) {
 	if cq.e-cq.s == cq.sz {
 		if cq.sz == cq.maxSz {
 			return false
 		}
 		cq.resize(cq.sz << 1)
 	}
-	cq.b[cq.e&cq.m] = e
+	cq.b[cq.e&cq.m] = el
 	cq.e++
 	return true
 }
@@ -121,7 +121,7 @@ func (cq *__Q) PushBack(e __ELTYPE) (ok bool) {
 // PushFront adds element "e" to the front (head) of the queue. Returns
 // ok == false if the list was full (unable to push element), ok ==
 // true otherwise.
-func (cq *__Q) PushFront(e __ELTYPE) (ok bool) {
+func (cq *__Q) PushFront(el __ELTYPE) (ok bool) {
 	if cq.e-cq.s == cq.sz {
 		if cq.sz == cq.maxSz {
 			return false
@@ -129,7 +129,7 @@ func (cq *__Q) PushFront(e __ELTYPE) (ok bool) {
 		cq.resize(cq.sz << 1)
 	}
 	cq.s--
-	cq.b[cq.s&cq.m] = e
+	cq.b[cq.s&cq.m] = el
 	return true
 }
 
