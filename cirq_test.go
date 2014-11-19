@@ -6,18 +6,18 @@ type pushFn func(interface{}) bool
 type popFn func() (interface{}, bool)
 
 func testLIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
-	if !q.Empty() || q.Full() || q.Len() != 0 || q.Cap() != maxSz {
+	if !q.Empty() || q.Full() || q.Len() != 0 || q.MaxCap() != maxSz {
 		t.Fatalf("Initially: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 	for i := 0; i < maxSz; i++ {
 		ok := push(i)
 		if !ok {
 			t.Fatalf("Cannot push %d", i)
 		}
-		if q.Empty() || q.Len() != i+1 || q.Cap() != maxSz {
+		if q.Empty() || q.Len() != i+1 || q.MaxCap() != maxSz {
 			t.Fatalf("After %d Pushes: E=%v, F=%v, L=%d, C=%d",
-				i+1, q.Empty(), q.Full(), q.Len(), q.Cap())
+				i+1, q.Empty(), q.Full(), q.Len(), q.MaxCap())
 		}
 		if i < maxSz-1 && q.Full() {
 			t.Fatal("Bad queue-full inication")
@@ -32,7 +32,7 @@ func testLIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
 		if !ok {
 			t.Fatalf("Cannot pop %d", maxSz-i-1)
 		}
-		if q.Full() || q.Len() != maxSz-i-1 || q.Cap() != maxSz {
+		if q.Full() || q.Len() != maxSz-i-1 || q.MaxCap() != maxSz {
 			t.Fatalf("Bad queue after %d Pops", i)
 		}
 		if i < maxSz-1 && q.Empty() {
@@ -42,16 +42,16 @@ func testLIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
 			t.Fatalf("Bad element %d: %d", i, ei.(int))
 		}
 	}
-	if !q.Empty() || q.Full() || q.Len() != 0 || q.Cap() != maxSz {
+	if !q.Empty() || q.Full() || q.Len() != 0 || q.MaxCap() != maxSz {
 		t.Fatalf("Finally: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 }
 
 func testFIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
-	if q.Full() || !q.Empty() || q.Len() != 0 || q.Cap() != maxSz {
+	if q.Full() || !q.Empty() || q.Len() != 0 || q.MaxCap() != maxSz {
 		t.Fatalf("Initially: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 	for i := 0; i < maxSz; i++ {
 		ok := push(i)
@@ -72,9 +72,9 @@ func testFIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
 			t.Fatalf("Cannot push %d", i)
 		}
 		if !q.Full() || q.Empty() ||
-			q.Len() != maxSz || q.Cap() != maxSz {
+			q.Len() != maxSz || q.MaxCap() != maxSz {
 			t.Fatalf("After %d ops: E=%v, F=%v, L=%d, C=%d",
-				i+1, q.Empty(), q.Full(), q.Len(), q.Cap())
+				i+1, q.Empty(), q.Full(), q.Len(), q.MaxCap())
 		}
 	}
 	for i := 0; i < maxSz; i++ {
@@ -86,16 +86,16 @@ func testFIFO(t *testing.T, q *CQ, maxSz int, push pushFn, pop popFn) {
 			t.Fatalf("Bad element: %d != %d", ei.(int), i)
 		}
 	}
-	if q.Full() || !q.Empty() || q.Len() != 0 || q.Cap() != maxSz {
+	if q.Full() || !q.Empty() || q.Len() != 0 || q.MaxCap() != maxSz {
 		t.Fatalf("Finally: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 }
 
 func testResize(t *testing.T, q *CQ, maxSz int) {
-	if q.Full() || !q.Empty() || q.Len() != 0 || q.Cap() != maxSz {
+	if q.Full() || !q.Empty() || q.Len() != 0 || q.MaxCap() != maxSz {
 		t.Fatalf("Initially: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 	q.Compact(1)
 	for i := 1; i <= maxSz; i <<= 1 {
@@ -104,8 +104,8 @@ func testResize(t *testing.T, q *CQ, maxSz int) {
 			if !ok {
 				t.Fatalf("Cannot push %d", j)
 			}
-			if q.sz != uint32(i) {
-				t.Fatalf("Queue sz %d != %d", q.sz, i)
+			if q.Cap() != i {
+				t.Fatalf("Queue cap %d != %d", q.Cap(), i)
 			}
 		}
 	}
@@ -117,13 +117,13 @@ func testResize(t *testing.T, q *CQ, maxSz int) {
 			}
 		}
 		q.Compact(1)
-		if q.sz != uint32(i>>1) {
-			t.Fatalf("Queue sz %d != %d", q.sz, i>>1)
+		if q.Cap() != i>>1 {
+			t.Fatalf("Queue cap %d != %d", q.Cap(), i>>1)
 		}
 	}
-	if q.Full() || q.Empty() || q.Len() != 1 || q.Cap() != maxSz {
+	if q.Full() || q.Empty() || q.Len() != 1 || q.MaxCap() != maxSz {
 		t.Fatalf("Finally: E=%v, F=%v, L=%d, C=%d",
-			q.Empty(), q.Full(), q.Len(), q.Cap())
+			q.Empty(), q.Full(), q.Len(), q.MaxCap())
 	}
 }
 

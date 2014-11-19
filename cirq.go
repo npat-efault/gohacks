@@ -1,5 +1,10 @@
 // Auto-generated. !! DO NOT EDIT !!
 
+// Copyright (c) 2014, Nick Patavalis (npat@efault.net).
+// All rights reserved.
+// Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
+
 package cirq
 
 // CQ is a circular queue.
@@ -54,8 +59,15 @@ func (cq *CQ) Len() int {
 	return int(cq.e - cq.s)
 }
 
-// Cap returns the capacity of the queue (max # of element slots).
+// Cap returns the capacity of the queue (# of element slots currently
+// allocated).
 func (cq *CQ) Cap() int {
+	return int(cq.sz)
+}
+
+// MaxCap returns the maximum capacity of the queue (max # of element
+// allowed).
+func (cq *CQ) MaxCap() int {
 	return int(cq.maxSz)
 }
 
@@ -83,11 +95,12 @@ func (cq *CQ) PeekBack() (el interface{}, ok bool) {
 // it. Returns ok == false if the list was empty (unable to pop
 // element), ok == true otherwise.
 func (cq *CQ) PopFront() (el interface{}, ok bool) {
+	var zero interface{}
 	if cq.s == cq.e {
-		return el, false
+		return zero, false
 	}
 	el = cq.b[cq.s&cq.m]
-	cq.b[cq.s&cq.m] = nil
+	cq.b[cq.s&cq.m] = zero
 	cq.s++
 	return el, true
 }
@@ -96,12 +109,13 @@ func (cq *CQ) PopFront() (el interface{}, ok bool) {
 // it. Returns ok == false if the list was empty (unable to pop
 // elemnt), ok == true otherwise.
 func (cq *CQ) PopBack() (el interface{}, ok bool) {
+	var zero interface{}
 	if cq.s == cq.e {
-		return el, false
+		return zero, false
 	}
 	cq.e--
 	el = cq.b[cq.e&cq.m]
-	cq.b[cq.e&cq.m] = nil
+	cq.b[cq.e&cq.m] = zero
 	return el, true
 }
 

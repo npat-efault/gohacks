@@ -21,5 +21,6 @@ clean::
 
 cirq.go : cirq.gox
 	rm -f cirq.go
-	./cirq_gen.sh cirq CQ New 'interface{}' nil > cirq.go
+	./cirq_gen.sh cirq CQ New 'interface{}' > cirq.go.tmp
+	mv cirq.go.tmp cirq.go
 	chmod -w cirq.go
