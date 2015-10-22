@@ -168,6 +168,7 @@ func (cq *CQ) PushFront(el interface{}) (ok bool) {
 }
 
 // roundUp2 rounds v up to the nearest power of 2
+// see: http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 func roundUp2(v uint32) uint32 {
 	if v == 0 {
 		return 1
