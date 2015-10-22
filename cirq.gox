@@ -79,6 +79,15 @@ func (cq *__Q) PeekFront() (el __ELTYPE, ok bool) {
 	return cq.b[cq.s&cq.m], true
 }
 
+// MustPeekFront returns the front (head) element of the queue, without
+// removing it. Panics if the queue is empty.
+func (cq *__Q) MustPeekFront() (el __ELTYPE) {
+	if cq.s == cq.e {
+		panic("MustPeekFront from empty Q")
+	}
+	return cq.b[cq.s&cq.m]
+}
+
 // PeekBack returns the back (tail) element of the queue, without
 // removing it. Returns ok == false if the list is empty (unable to
 // peek element), ok == true otherwise.
@@ -89,7 +98,16 @@ func (cq *__Q) PeekBack() (el __ELTYPE, ok bool) {
 	return cq.b[(cq.e-1)&cq.m], true
 }
 
-// PopHead removes the front (head) element from the queue and returns
+// MustPeekBack returns the back (tail) element of the queue, without
+// removing it. Panics if the queue is empty.
+func (cq *__Q) MustPeekBack() (el __ELTYPE) {
+	if cq.s == cq.e {
+		panic("MustPeekBack from empty Q")
+	}
+	return cq.b[(cq.e-1)&cq.m]
+}
+
+// PopFront removes the front (head) element from the queue and returns
 // it. Returns ok == false if the list was empty (unable to pop
 // element), ok == true otherwise.
 func (cq *__Q) PopFront() (el __ELTYPE, ok bool) {
