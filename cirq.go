@@ -85,7 +85,7 @@ func (cq *CQ) PeekFront() (el interface{}, ok bool) {
 // removing it. Panics if the queue is empty.
 func (cq *CQ) MustPeekFront() (el interface{}) {
 	if cq.s == cq.e {
-		panic("MustPeekFront from empty queue")
+		panic("MustPeekFront from empty Q")
 	}
 	return cq.b[cq.s&cq.m]
 }
@@ -104,7 +104,7 @@ func (cq *CQ) PeekBack() (el interface{}, ok bool) {
 // removing it. Panics if the queue is empty.
 func (cq *CQ) MustPeekBack() (el interface{}) {
 	if cq.s == cq.e {
-		panic("MustPeekBack from empty queue")
+		panic("MustPeekBack from empty Q")
 	}
 	return cq.b[(cq.e-1)&cq.m]
 }
