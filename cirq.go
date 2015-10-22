@@ -187,8 +187,8 @@ func roundUp2(v uint32) uint32 {
 // sz. Argument sz *must* be a power of 2. In effect, Compact changes
 // the current size of the queue slice to the smalest possible size
 // nSz that satisfies all three: (1) nSz is a power of 2, (2) nSz >=
-// cq.Len(), (3) nSz >= sz. Compact does not affect the capacity
-// (maxSz) of the queue.
+// cq.Len(), (3) nSz >= sz. Compact does not affect the maximum
+// capacity (maxSz) of the queue.
 func (cq *CQ) Compact(sz int) {
 	if sz < 0 || uint32(sz) > cq.maxSz || uint32(sz)&(uint32(sz-1)) != 0 {
 		panic("Compact Q with invalid size")
