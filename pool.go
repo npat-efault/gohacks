@@ -19,8 +19,8 @@
 //     p.Put(o)
 //
 // Every time you request an object from the pool, you will either get
-// one of the objects stored in it or (if the pool is empty) a new
-// one allocated the the supplied function.
+// one of the objects stored in it or (if the pool is empty) a new one
+// allocated using the supplied function.
 //
 // It is safe to use the same pool concurrently from multiple
 // goroutines.
