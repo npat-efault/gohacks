@@ -1,6 +1,9 @@
 package cirq
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 type pushFn func(interface{}) bool
 type popFn func() (interface{}, bool)
@@ -145,4 +148,75 @@ func TestResize(t *testing.T) {
 	maxSz := 2048
 	q := New(1, maxSz)
 	testResize(t, q, maxSz)
+}
+
+func TestPeek(t *testing.T) {
+	maxSz := 2048
+	q := New(1, maxSz)
+	for i := 0; i < maxSz; i++ {
+		q.PushBack(i)
+	}
+	for i := 0; i < maxSz; i++ {
+		e, ok := q.PeekFront()
+		if !ok {
+			t.Fatalf("Failed to PeekFront %d", i)
+		}
+		if e.(int) != i {
+			t.Fatalf("PeekFront %d != %d", e.(int), i)
+		}
+		q.PopFront()
+	}
+	for i := 0; i < maxSz; i++ {
+		q.PushFront(i)
+	}
+	for i := 0; i < maxSz; i++ {
+		e, ok := q.PeekBack()
+		if !ok {
+			t.Fatalf("Failed to PeekBack %d", i)
+		}
+		if e.(int) != i {
+			t.Fatalf("PeekBack %d != %d", e.(int), i)
+		}
+		q.PopBack()
+	}
+}
+
+func TestMustPeek(t *testing.T) {
+	maxSz := 2048
+	q := New(1, maxSz)
+	for i := 0; i < maxSz; i++ {
+		q.PushBack(i)
+	}
+	for i := 0; i < maxSz; i++ {
+		e := q.MustPeekFront()
+		if e.(int) != i {
+			t.Fatalf("PeekFront %d != %d", e.(int), i)
+		}
+		q.PopFront()
+	}
+	for i := 0; i < maxSz; i++ {
+		q.PushFront(i)
+	}
+	for i := 0; i < maxSz; i++ {
+		e := q.MustPeekBack()
+		if e.(int) != i {
+			t.Fatalf("PeekBack %d != %d", e.(int), i)
+		}
+		q.PopBack()
+	}
+	func() {
+		defer func() {
+			x := recover()
+			if x == nil {
+				t.Fatal("No panic when peeking empty Q")
+			}
+			if !strings.HasPrefix(x.(string), "MustPeek") {
+				panic(x)
+			}
+		}()
+		// q is empty, so these should panic. The panic will
+		// be caught by the recover, above.
+		q.MustPeekBack()
+		q.MustPeekFront()
+	}()
 }
