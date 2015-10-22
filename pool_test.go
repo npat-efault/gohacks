@@ -122,6 +122,9 @@ func TestBSPoolEmpty(t *testing.T) {
 // interface{}. Avoided by specialized ByteSlice pool.
 //
 // run with:
+//   go test -v -benchmem -bench=.
+//
+// or, for more details, with:
 //      go test -v -memprofile=mem-bsp.out -bench='ByteSlicePool$'
 //   or go test -v -memprofile=mem-p.out -bench='Pool$'
 //   or go test -v -memprofile=mem-sp.out -bench='SyncPool$'
@@ -154,6 +157,11 @@ func BenchmarkAllocSyncPool(b *testing.B) {
 	s := make([]byte, 10)
 	for i := 0; i < b.N; i++ {
 		p.Put(s)
-		s = p.Get().([]byte)
+		si := p.Get()
+		var ok bool
+		s, ok = si.([]byte)
+		if !ok {
+			s = make([]byte, 10)
+		}
 	}
 }
