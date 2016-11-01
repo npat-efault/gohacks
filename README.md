@@ -6,6 +6,8 @@ Various Go hacks.
 
 - **pool:** Package pool implements simple object recycling pools.
 
+- **task:** Package task provides types and functions for managing tasks.
+
 
 [Documentation at godoc.org.](https://godoc.org/github.com/npat-efault/gohacks)
 
