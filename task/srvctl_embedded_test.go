@@ -23,7 +23,7 @@ type FooServer struct {
 
 func NewFooServer( /* ... params ...*/ ) *FooServer {
 	fs := &FooServer{}
-	fs.SrvCtl = task.NewSrvCtl(fs.serve, fs.init)
+	fs.SrvCtl = task.NewSrvCtlCtx(fs.serve, fs.init)
 	// ... foo server instance init ...
 	return fs
 }

@@ -46,34 +46,42 @@ type Task interface {
 	WaitChan() <-chan struct{}
 }
 
-// StartFunc is an entry-point function that can be run as a task. The
-// function must take a context.Context as an argument, which may be
-// canceled to request the task's termination.
-type StartFunc func(context.Context) error
+// StartFuncCtx is an entry-point function that can be run as a
+// task. The function must take a context.Context as an argument,
+// which may be canceled to request the task's termination.
+type StartFuncCtx func(context.Context) error
 
 // Single is used to start a signle goroutine as a task (a goroutine
 // that can be killed and waited-for). All Single methods can be
 // called concurently.
 type Single struct {
-	cancel func()
+	m      sync.Mutex
+	fnKill func()
+	killed bool
 	end    chan struct{}
 	err    error
 }
 
 // Go starts a task using the given function as entry point.
-func Go(f StartFunc) *Single {
+func Go(f StartFuncCtx) *Single {
 	return GoWithContext(context.Background(), f)
 }
 
 // GoWithContext is similar to Go, but uses ctx as the parent of
 // the context that will be used for the task's cancelation.
-func GoWithContext(ctx context.Context, f StartFunc) *Single {
-	s := &Single{}
-	ctx, s.cancel = context.WithCancel(ctx)
-	s.end = make(chan struct{})
+func GoWithContext(ctx context.Context, fnStart StartFuncCtx) *Single {
+	ctx, cancel := context.WithCancel(ctx)
+	fnS := func() error {
+		return fnStart(ctx)
+	}
+	return goNoCtx(fnS, cancel)
+}
+
+func goNoCtx(fnStart func() error, fnKill func()) *Single {
+	s := &Single{fnKill: fnKill, end: make(chan struct{})}
 	go func() {
-		s.err = f(ctx)
-		s.cancel()
+		s.err = fnStart()
+		s.Kill()
 		close(s.end)
 	}()
 	return s
@@ -82,12 +90,19 @@ func GoWithContext(ctx context.Context, f StartFunc) *Single {
 // Kill requests task s to quit. Kill returns imediatelly (does not
 // wait for the task to terminate).
 func (s *Single) Kill() Task {
-	s.cancel()
+	s.m.Lock()
+	if s.killed {
+		s.m.Unlock()
+		return s
+	}
+	s.killed = true
+	s.m.Unlock()
+	s.fnKill()
 	return s
 }
 
 // Wait waits for task s to terminate and returns its exit status
-// (i.e. the return value of its entry-point StartFunc).
+// (i.e. the return value of its entry-point StartFuncCtx).
 func (s *Single) Wait() error {
 	<-s.end
 	return s.err
@@ -143,10 +158,10 @@ func (g *Grp) KillOnError() *Grp {
 	return g
 }
 
-// Go starts a goroutine in the group using the StartFunc f as an
+// Go starts a goroutine in the group using the StartFuncCtx f as an
 // entry point. Go can be called multiple times to start multiple
 // goroutines.
-func (g *Grp) Go(f StartFunc) *Grp {
+func (g *Grp) Go(f StartFuncCtx) *Grp {
 	g.wg.Add(1)
 	go func() {
 		defer g.wg.Done()
@@ -176,7 +191,7 @@ func (g *Grp) Kill() Task {
 // Wait waits for task g to terminate and returns its exit-status. The
 // task terminates when all it's goroutines exit. As exit status of
 // the task is considered the first non-nil value returned by the
-// StartFunc of one of it's goroutines.
+// entry-point function of one of it's goroutines.
 func (g *Grp) Wait() error {
 	g.wg.Wait()
 	g.cancel()
@@ -202,33 +217,47 @@ func (g *Grp) WaitChan() <-chan struct{} {
 // methods for starting, stopping, waiting, and re-starting
 // server-instances in a convenient, race-free manner. A pointer to
 // SrvCtl can be embedded (either anonymoysly or not) in the
-// controlled server type. SrvCtl is initialized (via NewSrvCtl) by
-// two functions (most likely method-values): One is spawned as the
-// sever-task (goroutine) when Start is called; the other (which may
-// be nil) is called immediately before. It is safe to call all SrvCtl
-// methods concurently. See example for details.
+// controlled server type. Alternatively SrvCtl and the controlled
+// server type can be embedded in a new type. It is safe to call all
+// SrvCtl methods concurently. See examples for details.
 //
 type SrvCtl struct {
-	m       sync.Mutex
-	t       *Single
-	fnStart StartFunc // func(context.Context) error
-	fnPre   func()
+	m          sync.Mutex
+	t          Task
+	fnStartCtx StartFuncCtx
+	fnStart    func() error
+	fnKill     func()
+	fnPre      func()
+}
+
+// NewSrvCtlCtx returns (a pointer to) an initialized server
+// controller. It is intialized with two functions (most likely
+// method-values): fnStart is the function that will be spawned as the
+// server task (goroutine). fnPre is a function to be called before
+// spawning the server goroutine. fnPre may be nil. The supplied
+// fnStart must accept a context.Context argument that will be
+// canceled when the termination of the controlled server's instance
+// operation is requested (i.e. when SrvCtl.Kill is invoked).
+func NewSrvCtlCtx(fnStartCtx StartFuncCtx, fnPre func()) *SrvCtl {
+	return &SrvCtl{fnStartCtx: fnStartCtx, fnPre: fnPre}
 }
 
 // NewSrvCtl returns (a pointer to) an initialized server
-// controller. The returned pointer can be embedded (either
-// anonymously, or as a named field) in the controlled server type /
-// structure. It is intialized with two functions (most likely
+// controller. It is intialized with three functions (most likely
 // method-values): fnStart is the function that will be spawned as the
 // server task (goroutine). fnPre is a function to be called before
-// spawning the server goroutine. fnPre may be nil.
-func NewSrvCtl(fnStart StartFunc, fnPre func()) *SrvCtl {
-	return &SrvCtl{fnStart: fnStart, fnPre: fnPre}
+// spawning the server goroutine (fnPre may be nil). fnKill is the
+// function called to request the termination of the controlled
+// server's operation (i.e. fnKill is called when SrvCtl.Kill is
+// invoked). fnKill is called only once, even if SrvCtl.Kill is
+// invoked multiple times.
+func NewSrvCtl(fnStart func() error, fnPre, fnKill func()) *SrvCtl {
+	return &SrvCtl{fnStart: fnStart, fnPre: fnPre, fnKill: fnKill}
 }
 
 // task is a helper that reads and returns a pointer to the
 // task-structure atomically
-func (sc *SrvCtl) task() *Single {
+func (sc *SrvCtl) task() Task {
 	sc.m.Lock()
 	t := sc.t
 	sc.m.Unlock()
@@ -253,7 +282,11 @@ func (sc *SrvCtl) Start() Task {
 	if sc.fnPre != nil {
 		sc.fnPre()
 	}
-	sc.t = Go(sc.fnStart)
+	if sc.fnStartCtx != nil {
+		sc.t = Go(sc.fnStartCtx)
+	} else {
+		sc.t = goNoCtx(sc.fnStart, sc.fnKill)
+	}
 	return sc
 }
 

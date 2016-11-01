@@ -50,7 +50,7 @@ type CtledBarServer struct {
 func NewCtledBarServer( /* ... params ...*/ ) *CtledBarServer {
 	cfs := &CtledBarServer{}
 	cfs.BarServer = NewBarServer( /* ... params ...*/ )
-	cfs.SrvCtl = task.NewSrvCtl(cfs.BarServer.serve, cfs.BarServer.init)
+	cfs.SrvCtl = task.NewSrvCtlCtx(cfs.BarServer.serve, cfs.BarServer.init)
 	return cfs
 }
 
