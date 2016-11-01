@@ -280,12 +280,10 @@ func (sc *SrvCtl) Wait() error {
 	return t.Wait()
 }
 
-// WaitChan returns a channel from which the managed server's exit
-// code (the server's Serve return value) can be received. WaitChan
-// does not wait for the server to terminate. Reading from the channel
-// blocks the reader until it does. If the server has *never* been
-// started, a receive from the returned channel will yield
-// ErrNotStarted.
+// WaitChan returns a channel that will be closed when the
+// controlled-server terminates. After the receive from the returned
+// channel suceeds, Wait can be called to retrieve the server's exit
+// status. Usefull for select statements.
 func (sc *SrvCtl) WaitChan() <-chan struct{} {
 	t := sc.task()
 	if t == nil {
